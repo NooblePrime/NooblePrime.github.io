@@ -16,13 +16,17 @@
     background-color: #303030;
   }
   .sidebar {
-    height: 93%;
+    height: 100%;
     width: 125px;
     background-color: #30B700;
     position: absolute;
     top: 45px;
     left: 0;
     padding-top: 0px;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    z-index: 1;
+    position: fixed;
   }
   p.side {
     margin-top: 0px;
