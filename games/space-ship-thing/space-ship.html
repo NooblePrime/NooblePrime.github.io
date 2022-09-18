@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<head>
+    <link rel="stylesheet" href="../../style.css">
+    <title>space ship thing</title>
+    <link rel="icon" type="image/x-icon" href="../../basicAssets/strawberry.ico">
+</head>
+<body onload="startGame()">
+    <h1>
+        <a href="../../index.html" style="text-decoration:none">
+        <img id="strawberry" src="../../basicAssets/strawberry.png" width="28px" height="30px" style="padding-left:1%">
+        Strawberry
+        </a>
+    </h1>
+    <div class="sidebar">
+        <p class="side">
+            <a href="../games-index.html" style="text-decoration:none">games</a>
+        </p>
+    </div>
+    <h2>space ship thing</h2>
+    <div onload="startGame()">
+        <canvas id="myCanvas" class="game" width="1920px" height="1080px">
+            <img id="ship" src="assets/ship.png">
+            <script>
+                const c = document.getElementById("myCanvas");
+                const ctx = c.getContext("2d");
+                const shipImg = document.getElementById("ship");
+                var shipSpeed = 5;
+                const entities = [];
+                var kill = [];
+                var check = [];
+                const ship = {
+                    type: 0,
+                    pos: [910, 900],
+                    momentum: [0, 0],
+                    //direction: [up, down, left, right]
+                    direction: [false, false, false, false],
+                    speed: 5,
+                    hp: 10,
+                    reloading: false,
+                    size: [100, 125],
+                    points: {
+                        one: [0, 0],
+                        two: [0, 0],
+                        three: [0, 0]
+                    },
+                    angle: [0]
+                };
+                //ship variables to make my life easier
+                var shipX = ship.pos[0];
+                var shipY = ship.pos[1];
+                var speedX = ship.momentum[0];
+                var speedY = ship.momentum[1];
+                var up = ship.direction[0];
+                var down = ship.direction[1];
+                var left = ship.direction[2];
+                var right = ship.direction[3];
+                var shipWidth =  ship.size[0];
+                var shipHeight = ship.size[1];
+                var reloading = ship.reloading;
+                
+                //just some math functions I threw together to make things go smoother, will add more as needed
+                function absHypot(x1, y1, x2, y2){
+                    let cc = 0;
+                    let a = Math.abs(x1 - x2);
+                    let b = Math.abs(y1 - y2);
+                    return Math.sqrt((a*a) + (b*b));
+                };
+                //note to self: use whatever point on the triangle has the highest/lowest value for wall hitbox
+                //make vertecies of triangle relative to center of triangle
+                //shooting stuff
+                function reload(){
+                    reloading = false;
+                };
+                function shoot(){
+                    if(reloading == true){
+                        return;
+                    } else{
+                        //this is where the "bullets" are made
+                        entities.push({
+                            type: 1,
+                            pos: [shipX + (0.5*shipWidth), shipY],
+                            radius: 20,
+                            momentum: [0, -10]
+                        });
+                        reloading = true;
+                        setTimeout(reload, 500);
+                    };
+                };
+                var spam;
+                function spamming(){
+                    if(spam == null){
+                        shoot();
+                        spam = setInterval(shoot, 4);
+                    };
+                };
+                function stopSpam(){
+                    clearInterval(spam);
+                    spam = null;
+                };
+                //player movement stuff
+                async function move(key){
+                    if(key == 65) {
+                        left = true;
+                    } else if(key == 87){
+                        up = true;
+                    } else if(key == 68){
+                        right = true;
+                    } else if(key == 83){
+                        down = true;
+                    } else if(key == 32){
+                        spamming();
+                    };
+                };
+                async function halt(key){
+                    if(key == 65) {
+                        left = false;
+                    } else if(key == 87){
+                        up = false;
+                    } else if(key == 68){
+                        right = false;
+                    } else if(key == 83){
+                        down = false;
+                    } else if(key == 32){
+                        stopSpam();
+                    };
+                };
+                function speedCheck(){
+                    if(left == true || right == true){
+                        if(left == true && right == true){
+                            speedX = 0;
+                        } else if(right == true){
+                            speedX = ship.speed;
+                        } else if (left == true){
+                            speedX = -ship.speed;
+                        }
+                    } else{
+                        speedX = 0;
+                    };
+                    if(up == true || down == true){
+                        if(up == true && down == true){
+                            speedY = 0;
+                        }else if(up == true){
+                            speedY = ship.speed;
+                        } else if(down == true){
+                            speedY = -ship.speed;
+                        }
+                    } else{
+                        speedY = 0;
+                    };
+                    if(speedX != 0 && speedY != 0){
+                        speedX *= 0.7071;
+                        speedY *= 0.7071;
+                    };
+                    speedX = Math.round(speedX);
+                    speedY = Math.round(speedY);
+                };
+                function wall(){
+                    if(shipX < 0){
+                        shipX = 0;
+                    } else if(shipX > 1920 - shipWidth){
+                        shipX = 1920 - shipWidth;
+                    };
+                    if(shipY < 0){
+                        shipY = 0;
+                    } else if(shipY > 1080 - shipHeight){
+                        shipY = 1080 - shipHeight;
+                    };
+                };
+                //teaching the computer how to slap people
+                function hitboxCheck(num, type, x, y, radius){
+                    let group = hitGroups(num);
+                    let output = [false, -1];
+                    if(type == 1){
+                        for(let i = 0; i < group.length; i++){
+                            let o = group[i];
+                            let testX1 = o.pos[0] - radius;
+                            let testX2 = o.pos[0] + o.size[0] + radius;
+                            let testY1 = o.pos[1] - radius;
+                            let testY2 = o.pos[1] + o.size[1] + radius;
+                            if(testX1 <= x && testX2 >= x && testY1 <= y && testY2 >= y){
+                                output = [true, o];
+                            };
+                        };
+                    };
+                    return output;
+                };
+                function hitGroups(num){
+                    let group = [];
+                    for(let i = 0; i < entities.length; i++){
+                        let o = entities[i];
+                        if(o.type == num){
+                            group.push(o);
+                        };
+                    };
+                    return group;
+                };
+                function hpChange(entity, change){
+                    if(entity.type == 2){
+                        return entity.hp + change;
+                    } else{
+                        return entity.hp;
+                    };
+                };
+
+                var frameNum = 0;
+                function newFrame(){
+                    frameNum += 1;
+                    speedCheck();
+                    ctx.clearRect(0, 0, 1920, 1080);
+                    ctx.fillStyle = "#101020";
+                    ctx.fillRect(0, 0, 1920, 1080);
+                    shipX += speedX;
+                    shipY -= speedY;
+                    wall();
+                    ctx.drawImage(shipImg, shipX, shipY, shipWidth, shipHeight);
+                    for(let i = 0; i < entities.length; i++){
+                        let j = entities[i];
+                        if(j.type == 1){
+                            let x = j.pos[0];
+                            let y = j.pos[1];
+                            let check = hitboxCheck(2, 1, j.pos[0], j.pos[1], j.radius);
+                            if(check.length > 0 && check[0] == true){
+                                kill.push(j);
+                                let life = hpChange(check[1], -1);
+                                if(life <= 0){
+                                    kill.push(j);
+                                    kill.push(check[1]);
+                                } else{
+                                    check[1].hp = life;
+                                };
+                            } else{
+                                ctx.beginPath();
+                                ctx.arc(x, y, j.radius, 0, 2*Math.PI);
+                                console.log(x, y, j.radius);
+                                ctx.fillStyle = "#FF0000";
+                                ctx.fill();
+                                ctx.stroke();
+                                if(j.pos[0] > 2100 || j.pos[0] < -100){
+                                    kill.push(j);
+                                } else if(j.pos[1] > 1200 || j.pos[1] < -100){
+                                    kill.push(j);
+                                };
+                                j.pos[0] += j.momentum[0];
+                                j.pos[1] += j.momentum[1];
+                            };
+                        } else if(j.type == 2){
+                            if(j.hp == 3){
+                                ctx.fillStyle = "#00FF00";
+                            } else if(j.hp == 2){
+                                ctx.fillStyle = "#FFFF00";
+                            } else if(j.hp == 1){
+                                ctx.fillStyle = "#FFA500";
+                            };
+                            j.pos[0] += j.momentum[0];
+                            j.pos[1] += j.momentum[1];
+                            ctx.fillRect(j.pos[0], j.pos[1], j.size[0], j.size[1]);
+                        };
+                    };
+                    while(kill.length > 0){
+                        entities.splice(entities.indexOf(kill.pop()), 1);
+                    };
+                    ctx.font = "30px Arial";
+                    ctx.fillStyle = "white";
+                    ctx.fillText("Frame " + frameNum, 0, 30);
+                };
+                //I would like to complain to the original developer of this script about there being too many functions. Oh wait... I'm the original developer... AAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                //I guess I need to go speak to my manager. Oh wait... I'm my own manager... AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                function startGame(){
+                    window.addEventListener("keydown", KeyboardEvent => move(KeyboardEvent.keyCode));
+                    window.addEventListener("keyup", KeyboardEvent => halt(KeyboardEvent.keyCode));
+                    setInterval(newFrame, 20);
+                    entities.push({
+                        type: 2,
+                        pos: [400, 200],
+                        size: [200, 200],
+                        momentum: [2, 0],
+                        hp: 3
+                    });
+                };
+            </script>
+        </canvas>
+    </div>
+</body>
