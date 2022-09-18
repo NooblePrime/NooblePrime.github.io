@@ -1,0 +1,47 @@
+  h1 {
+    margin-top: 0px;
+    line-height: 115%;
+    background-color: #c83f49;
+  }
+  
+  h2 {
+    padding-top: 0px;
+    margin-top: -20px;
+    margin-left: 150px;
+    color: skyblue;
+  }
+
+  body {
+    margin: 0px;
+    background-color: #303030;
+  }
+  .sidebar {
+    height: 93%;
+    width: 125px;
+    background-color: #30B700;
+    position: absolute;
+    top: 45px;
+    left: 0;
+    padding-top: 0px;
+  }
+  p.side {
+    margin-top: 0px;
+    margin-left: 2px;
+    font-weight: bold;
+    color:black;
+  }
+  a {
+    color:black;
+  }
+  p {
+    margin-left:150px;
+    margin-right:20px;
+    margin-top:20px;
+    color:skyblue;
+  }
+  canvas.game {
+    margin-left: 150px;
+    margin-top: 0px;
+    width: 68%;
+    height: 68%;
+  }
